@@ -1,2 +1,1 @@
-Kufu.updateActiveItems();
-
+Kufu.start();
