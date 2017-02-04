@@ -9,15 +9,22 @@ var Kufu = (function() {
      */
     var userData = {};
 
-    // Track website and how long they're on for.
-
     /**
      * Start all of the required services.
      */
     function start() {
         tryLoadUserData();
-        updateStats();
         startClock();
+    }
+
+    /**
+     * Gets called every minute.
+     */
+    function updateStats() {
+        chrome.tabs.query({
+            active: true
+        }, handleTabs);
+        updateTrackingView();
     }
 
     /**
@@ -26,8 +33,16 @@ var Kufu = (function() {
      */
     function tryLoadUserData() {
         chrome.storage.sync.get("Kufu_UserData", function(items) {
-            // userData = items ? items.userData : {};
-            USER_DATA_LOADED = true;
+            if (chrome.runtime.lastError) {
+                console.error("Shit's on fire, yo");
+            } else {
+                // TODO
+                console.log("Loaded previous user data.");
+                console.dir(items.Kufu_UserData);
+                userData = items.Kufu_UserData;
+                USER_DATA_LOADED = true;
+                updateTrackingView();
+            }
         });
     }
 
@@ -48,21 +63,19 @@ var Kufu = (function() {
      */
     function handleTabs(tabs) {
         for (var i = 0; i < tabs.length; i++) {
-            checkWindow(tabs[i].windowId, tabs[i].title);        
+            checkWindow(tabs[i]);
         }
     }
 
     /**
      * Checks if a window is not minimized and if it is it adds the active tab
      * to the list.
-     * @param {Integer} windowId - A window ID.
-     * @param {String} title - The title of a tab.
+     * @param {Object} tab - The tab whose window is being checked.
      */
-    function checkWindow(windowId, title) {
-        chrome.windows.get(windowId, function(win) {
+    function checkWindow(tab) {
+        chrome.windows.get(tab.windowId, function(win) {
             if (win.state !== "minimized") {
-                addActiveTabItem(title);
-                updateTrackingValue(title);
+                updateTrackingValue(tab.title);
             }
         });
     }
@@ -73,49 +86,39 @@ var Kufu = (function() {
      */
     function updateTrackingValue(title) {
         if (USER_DATA_LOADED) {
-            if (typeof userData === "object" && userData[title] === "object") {
+            if (
+                typeof userData === "object" &&
+                typeof userData[title] === "object"
+            ) {
                 userData[title].time++;
             } else {
                 userData[title] = {
                     time: 1
                 }
             }
-            console.dir(userData);
             chrome.storage.sync.set({
-                userData: userData
+                Kufu_UserData: userData
             });
         }
     }
 
     /**
-     * Adds an active tab item to the HTML.
-     * @param {String} title - The title of the tab.
+     * Update the view for the data.
      */
-    function addActiveTabItem(title) {
+    function updateTrackingView() {
+        console.log("Updating tracking view.");
+        console.dir(userData);
+        for (var i in userData) {
+            console.log(i);
 
-        // Create the <li> element.
-        var li = document.createElement('li');
-        li.innerText = title;
+            // Create the <li> element.
+            var li = document.createElement('li');
+            li.innerText = i + " - " + userData[i].time;
 
-        // Append it to active tabs list.
-        var ul = document.getElementById('activeTabs');
-        ul.appendChild(li);
-    }
-
-    /**
-     * Updates the active tabs in the popup window.
-     */
-    function updateActiveItems() {
-        chrome.tabs.query({
-            active: true
-        }, handleTabs);
-    }
-
-    /**
-     * Gets called every minute.
-     */
-    function updateStats() {
-        updateActiveItems();
+            // Append it to active tabs list.
+            var ul = document.getElementById('activeTabs');
+            ul.appendChild(li);
+        }
     }
 
     return {
