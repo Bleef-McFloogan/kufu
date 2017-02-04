@@ -50,6 +50,7 @@ var Kufu = (function() {
         chrome.tabs.query({
             active: true
         }, handleTabs);
+    
     }
 
 
