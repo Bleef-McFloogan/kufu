@@ -2,6 +2,44 @@
  * Kufu - A browser extension for time management and productivity tracking.
  */
 var Kufu = (function() {
+    var USER_DATA_LOADED = false;
+
+    /**
+     * Working copy of the user's data.
+     */
+    var userData = {};
+
+    // Track website and how long they're on for.
+
+    /**
+     * Start all of the required services.
+     */
+    function start() {
+        tryLoadUserData();
+        updateStats();
+        startClock();
+    }
+
+    /**
+     * Try to load the user's data. If they don't have any, returns an empty
+     * array.
+     */
+    function tryLoadUserData() {
+        chrome.storage.sync.get("Kufu_UserData", function(items) {
+            // userData = items ? items.userData : {};
+            USER_DATA_LOADED = true;
+        });
+    }
+
+    /**
+     * Start the timer to update the stats every n seconds.
+     */
+    function startClock() {
+        chrome.alarms.onAlarm.addListener(updateStats);
+        chrome.alarms.create("Kufu_Tracker", {
+            periodInMinutes: 1
+        });
+    }
 
     /**
      * Given the active tabs, decides which ones are not in minimized windows
@@ -24,8 +62,29 @@ var Kufu = (function() {
         chrome.windows.get(windowId, function(win) {
             if (win.state !== "minimized") {
                 addActiveTabItem(title);
+                updateTrackingValue(title);
             }
         });
+    }
+
+    /**
+     * Updates the tracking value of a page by one.
+     * @param {String} title - The title of the page.
+     */
+    function updateTrackingValue(title) {
+        if (USER_DATA_LOADED) {
+            if (typeof userData === "object" && userData[title] === "object") {
+                userData[title].time++;
+            } else {
+                userData[title] = {
+                    time: 1
+                }
+            }
+            console.dir(userData);
+            chrome.storage.sync.set({
+                userData: userData
+            });
+        }
     }
 
     /**
@@ -52,9 +111,15 @@ var Kufu = (function() {
         }, handleTabs);
     }
 
+    /**
+     * Gets called every minute.
+     */
+    function updateStats() {
+        updateActiveItems();
+    }
 
     return {
-        updateActiveItems: updateActiveItems
+        start: start
     };
 }());
     
