@@ -49,7 +49,9 @@ var Kufu = (Kufu === undefined) ? (function() {
 
                     newData = groupSmallValuesToOther(newData);
 
-                    callback(newData);
+                    if (typeof callback === "function") {
+                        callback(newData);
+                    }
                 } else {
                     userData = {};
                 }
@@ -103,6 +105,7 @@ var Kufu = (Kufu === undefined) ? (function() {
             var lastUpdated = moment(userData[title].lastUpdated);
 
             if (lastUpdated.isBefore(moment.now(), 'minute')) {
+                console.log(moment(moment.now()).format("h:mm") + " - Adding one minute to " + title);
                 userData[title].minsInLastHour++;
                 userData[title].minsInLastDay++;
                 userData[title].minsInLastWeek++;
