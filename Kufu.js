@@ -45,14 +45,14 @@ var Kufu = (Kufu === undefined) ? (function() {
                         // var mins;
                         if(Math.floor(userData[i].minsInLastHour < 60)){
                             newData.push({
-                            label: i + " " + userData[i].minsInLastHour + " mins",
+                            label: i + " (" + "" + userData[i].minsInLastHour  + " mins" + ")",
                             value: userData[i].minsInLastHour
                             });
                         }
 
                         else{
                             newData.push({
-                            label: i + " " + Math.floor(userData[i].minsInLastHour/60) + " hrs " + userData[i].minsInLastHour%60 + " mins ",
+                            label: i + " (" + "" + Math.floor(userData[i].minsInLastHour/60) + " hrs " + ")" + userData[i].minsInLastHour%60 + " mins ",
                             value: userData[i].minsInLastHour
                             });
                         }
