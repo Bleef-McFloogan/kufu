@@ -12,25 +12,27 @@ var KufuGraph = (function() {
 
     var width = 250,
         height = 350,
-      radius = Math.min(width, height) / 2;
+        radius = Math.min(width, height) / 2;
 
     var pie = d3.layout.pie()
-      .sort(null)
-      .value(function(d) {
-        return d.value;
-      });
+        .sort(null)
+        .value(function(d) {
+            return d.value;
+        });
 
     var arc = d3.svg.arc()
-      .outerRadius(radius * 0.8)
-      .innerRadius(radius * 0.4);
+        .outerRadius(radius * 0.8)
+        .innerRadius(radius * 0.4);
 
     var outerArc = d3.svg.arc()
-      .innerRadius(radius * 0.9)
-      .outerRadius(radius * 0.9);
+        .innerRadius(radius * 0.9)
+        .outerRadius(radius * 0.9);
 
     svg.attr("transform", "translate(250,150)");
 
-    var key = function(d){ return d.data.label; };
+    var key = function(d){
+        return d.data.label;
+    };
 
     var color = d3.scale.category20()
       .domain(["Lorem ipsum", "dolor sit", "amet", "consectetur", "adipisicing", "elit", "sed", "do", "eiusmod", "tempor", "incididunt"]);

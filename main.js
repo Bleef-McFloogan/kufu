@@ -1,1 +1,3 @@
-Kufu.start();
+Kufu.tryLoadUserData(function(data) {
+    KufuGraph.setGraphData(data);
+});
