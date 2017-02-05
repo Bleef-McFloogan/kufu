@@ -29,7 +29,7 @@ var Kufu = (Kufu === undefined) ? (function() {
      * Try to load the user's data. If they don't have any, returns an empty
      * array.
      */
-    function tryLoadUserData() {
+    function tryLoadUserData(callback) {
         chrome.storage.sync.get("Kufu_UserData", function(items) {
             if (chrome.runtime.lastError) {
                 console.error(chrome.runtime.lastError);
@@ -37,6 +37,19 @@ var Kufu = (Kufu === undefined) ? (function() {
                 if (items.hasOwnProperty("Kufu_UserData")) {
                     userData = items.Kufu_UserData;
                     updateTrackingView();
+
+                    // Convert the data to the format needed by the D3 graph.
+                    var newData = [];
+                    for (var i in userData) {
+                        newData.push({
+                            label: i,
+                            value: userData[i].minsInLastHour
+                        });
+                    }
+
+                    newData = groupSmallValuesToOther(newData);
+
+                    callback(newData);
                 } else {
                     userData = {};
                 }
@@ -142,9 +155,21 @@ var Kufu = (Kufu === undefined) ? (function() {
             li.innerText = i + " - " + userData[i].minsInLastHour;
 
             // Append it to active tabs list.
+            /*
             var ul = document.getElementById('activeTabs');
             ul.appendChild(li);
+            */
         }
+    }
+
+    /**
+     * Calculate the items with values that are below some percentage threshold
+     * and combine them into one object with a value equal to the sum of their
+     * individual values.
+     * @param {Object[]} data - The data to group the small items for.
+     */
+    function groupSmallValuesToOther(data) {
+        return data; // CHANGE THIS
     }
 
     return {
