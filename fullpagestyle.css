@@ -1,14 +1,24 @@
-@import url('https://fonts.googleapis.com/css?family=Hind')
+@import url('https://fonts.googleapis.com/css?family=Hind&Open+Sans')
 
 #header {
     background-color: #fff;
     color: #CF2CC8;
     font-family: 'Hind', sans-serif;
-    font-weight: normal;
+}
+
+#header > p {
+    font-size: 56px;
+    text-align: center;
+    color: #CF2CC8;
 }
 
 body {
     margin: 0;
+}
+
+.labels {
+    font-size: 16px;
+    fill: #555;
 }
 
 #container {

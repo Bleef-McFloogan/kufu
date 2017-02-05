@@ -15,10 +15,10 @@ setTimeout(function() {
     bb = g.getBBox();
     var thatWidth = g.getClientRects()[0].right - svg.getClientRects()[0].left;
     var finalMargin = window.innerWidth / 2 - (bb.width - thatWidth);
-    var width = parseInt(bb.width / 2);
-    var height = parseInt(bb.height / 2);
-    svg.style.width = bb.width;
-    svg.style.height = bb.height;
+    var width = parseInt(bb.width / 2 + 15);
+    var height = parseInt(bb.height / 2 + 15);
+    svg.style.width = bb.width + 30;
+    svg.style.height = bb.height + 30;
     svg.style.marginLeft = finalMargin;
     svg.style.opacity = 1;
     g.setAttribute("transform", "translate(" + (bb.width - thatWidth) + ", " + height + ")");
