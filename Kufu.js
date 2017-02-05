@@ -1,8 +1,7 @@
 /**
  * Kufu - A browser extension for time management and productivity tracking.
  */
-var Kufu = (function() {
-    var USER_DATA_LOADED = false;
+var Kufu = (Kufu === undefined) ? (function() {
 
     /**
      * Working copy of the user's data.
@@ -24,7 +23,6 @@ var Kufu = (function() {
         chrome.tabs.query({
             active: true
         }, handleTabs);
-        updateTrackingView();
     }
 
     /**
@@ -34,14 +32,14 @@ var Kufu = (function() {
     function tryLoadUserData() {
         chrome.storage.sync.get("Kufu_UserData", function(items) {
             if (chrome.runtime.lastError) {
-                console.error("Shit's on fire, yo");
+                console.error(chrome.runtime.lastError);
             } else {
-                // TODO
-                console.log("Loaded previous user data.");
-                console.dir(items.Kufu_UserData);
-                userData = items.Kufu_UserData;
-                USER_DATA_LOADED = true;
-                updateTrackingView();
+                if (items.hasOwnProperty("Kufu_UserData")) {
+                    userData = items.Kufu_UserData;
+                    updateTrackingView();
+                } else {
+                    userData = {};
+                }
             }
         });
     }
@@ -85,35 +83,63 @@ var Kufu = (function() {
      * @param {String} title - The title of the page.
      */
     function updateTrackingValue(title) {
-        if (USER_DATA_LOADED) {
-            if (
-                typeof userData === "object" &&
-                typeof userData[title] === "object"
-            ) {
-                userData[title].time++;
+        if (
+            typeof userData === "object" &&
+            typeof userData[title] === "object"
+        ) {
+            var lastUpdated = moment(userData[title].lastUpdated);
+
+            if (lastUpdated.isBefore(moment.now(), 'minute')) {
+                userData[title].minsInLastHour++;
+                userData[title].minsInLastDay++;
+                userData[title].minsInLastWeek++;
+                userData[title].minsInLastMonth++;
+                userData[title].minsInLastYear++;
+                userData[title].minsInAllTime++;
+
+                if (lastUpdated.isBefore(moment.now(), 'hour'))
+                    userData[title].minsInLastHour = 1;
+                if (lastUpdated.isBefore(moment.now(), 'day'))
+                    userData[title].minsInLastDay = 1;
+                if (lastUpdated.isBefore(moment.now(), 'week'))
+                    userData[title].minsInLastWeek = 1;
+                if (lastUpdated.isBefore(moment.now(), 'month'))
+                    userData[title].minsInLastMonth = 1;
+                if (lastUpdated.isBefore(moment.now(), 'year'))
+                    userData[title].minsInLastYear = 1;
+
+                userData[title].lastUpdated = moment.now();
             } else {
-                userData[title] = {
-                    time: 1
-                }
+                console.log("Not updating due to having been updated less " +
+                        "than a minute ago.");
             }
-            chrome.storage.sync.set({
-                Kufu_UserData: userData
-            });
+        } else {
+            userData[title] = {
+                minsInLastHour: 1,
+                minsInLastDay: 1,
+                minsInLastWeek: 1,
+                minsInLastMonth: 1,
+                minsInLastYear: 1,
+                minsInAllTime: 1,
+                lastUpdated: moment.now()
+            }
         }
+        chrome.storage.sync.set({
+            Kufu_UserData: userData
+        }, function() {
+            updateTrackingView();
+        });
     }
 
     /**
      * Update the view for the data.
      */
     function updateTrackingView() {
-        console.log("Updating tracking view.");
-        console.dir(userData);
         for (var i in userData) {
-            console.log(i);
 
             // Create the <li> element.
             var li = document.createElement('li');
-            li.innerText = i + " - " + userData[i].time;
+            li.innerText = i + " - " + userData[i].minsInLastHour;
 
             // Append it to active tabs list.
             var ul = document.getElementById('activeTabs');
@@ -122,7 +148,8 @@ var Kufu = (function() {
     }
 
     return {
-        start: start
+        start: start,
+        tryLoadUserData: tryLoadUserData,
+        updateStats: updateStats
     };
-}());
-    
+}()) : Kufu;
