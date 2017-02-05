@@ -5,6 +5,10 @@ Kufu.tryLoadUserData(function(data) {
 var g, svg;
 var bb;
 
+g = KufuGraph.svg[0][0];
+svg = g.parentElement;
+svg.style.opacity = 0;
+
 setTimeout(function() {
     g = KufuGraph.svg[0][0];
     svg = g.parentElement;
@@ -16,5 +20,6 @@ setTimeout(function() {
     svg.style.width = bb.width;
     svg.style.height = bb.height;
     svg.style.marginLeft = finalMargin;
+    svg.style.opacity = 1;
     g.setAttribute("transform", "translate(" + (bb.width - thatWidth) + ", " + height + ")");
 }, 1000);
