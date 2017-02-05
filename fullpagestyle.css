@@ -14,6 +14,7 @@
 
 body {
     margin: 0;
+    background-color: #FAE8EB;
 }
 
 .labels {
@@ -49,3 +50,4 @@ polyline {
 svg {
     transition: 0.5s;
 }
+
