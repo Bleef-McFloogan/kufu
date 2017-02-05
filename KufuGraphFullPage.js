@@ -10,8 +10,8 @@ var KufuGraph = (function() {
     svg.append("g")
       .attr("class", "lines");
 
-    var width = 250,
-        height = 350,
+    var width = 500,
+        height = 500,
         radius = Math.min(width, height) / 2;
 
     var pie = d3.layout.pie()
@@ -27,8 +27,6 @@ var KufuGraph = (function() {
     var outerArc = d3.svg.arc()
         .innerRadius(radius * 0.9)
         .outerRadius(radius * 0.9);
-
-    svg.attr("transform", "translate(250,150)");
 
     var key = function(d){
         return d.data.label;
@@ -190,6 +188,7 @@ var KufuGraph = (function() {
     };
 
     return {
-        setGraphData: change 
+        setGraphData: change,
+        svg: svg
     }
 }());
