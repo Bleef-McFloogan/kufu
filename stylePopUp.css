@@ -1,0 +1,35 @@
+@import url('https://fonts.googleapis.com/css?family=Hind');
+
+body {
+    background-color: #EEEEEE;
+    margin: 0;
+}
+
+h1{
+    margin: 0;
+}
+#header{
+    margin: 0;
+    font-size: 15px;
+    font-weight: normal;
+    font-family: 'Hind', sans-serif;
+    background-color: #C05792;
+    color: white;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#activeTabs{
+    margin:0;
+}
+
+#content{
+    background-color: white;
+}
+
+#footer{
+    padding-top: 5pt;
+    padding-bottom: 5pt;
+    text-align: center;
+}

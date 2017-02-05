@@ -15,7 +15,7 @@ var arc = d3.svg.arc();
 var pie = d3.layout.pie()
     .sort(null);
 
-var svg = d3.select("body").append("svg")
+var svg = d3.select("#content").append("svg")
     .attr("width", width)
     .attr("height", height);
 
