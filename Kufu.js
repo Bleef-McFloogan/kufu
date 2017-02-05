@@ -169,7 +169,25 @@ var Kufu = (Kufu === undefined) ? (function() {
      * @param {Object[]} data - The data to group the small items for.
      */
     function groupSmallValuesToOther(data) {
-        return data; // CHANGE THIS
+        var newData = [];
+        var otherSum = 0;
+        var sum = 0;
+
+        for(var i = 0; i < data.length; i++){
+            sum += data[i].value;
+        }
+
+        for(var i = 0; i < data.length; i++ ){
+            if(data[i].value/sum > 0.05 )
+                newData.push(data[i]);
+            else
+                otherSum += data[i].value;
+        }
+        newData.push({
+            label: "Other",
+            value: otherSum
+        });
+        return newData;
     }
 
     return {
