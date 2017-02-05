@@ -189,6 +189,8 @@ var KufuGraph = (function() {
 
     return {
         setGraphData: change,
-        svg: svg
+        getSvg: function() {
+          return svg;
+        }
     }
 }());

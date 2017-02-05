@@ -49,3 +49,34 @@ polyline {
 svg {
     transition: 0.5s;
 }
+
+#control-panel {
+    position: absolute;
+    top: 50px;
+    left: 50px;
+    color: #444;
+    font-size: 1.2rem;
+    padding: 2rem;
+    background-color: #eee;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+}
+
+#control-panel > input[type="text"] {
+    font-size: 1.2rem;
+    width: 3rem;
+    text-align: center;
+}
+
+#control-panel > label {
+    padding-bottom: 0.25rem;
+}
+
+#control-panel > button {
+    height: 30px;
+    margin-left: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: white;
+    border: 1px solid #bbb;
+    cursor: pointer;
+    border-radius: 5px;
+}

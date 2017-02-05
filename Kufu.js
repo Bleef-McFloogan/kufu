@@ -4,6 +4,12 @@
 var Kufu = (Kufu === undefined) ? (function() {
 
     /**
+     * The percentage that a piece of the pie must be for it not to be counted
+     * as "Other"
+     */
+    OTHER_THRESHOLD = 0.05;
+
+    /**
      * Working copy of the user's data.
      */
     var userData = {};
@@ -36,24 +42,19 @@ var Kufu = (Kufu === undefined) ? (function() {
             } else {
                 if (items.hasOwnProperty("Kufu_UserData")) {
                     userData = items.Kufu_UserData;
-                    updateTrackingView();
 
                     // Convert the data to the format needed by the D3 graph.
                     var newData = [];
                     for (var i in userData) {
-                        // var hours;
-                        // var mins;
-                        if(Math.floor(userData[i].minsInLastHour < 60)){
+                        if (Math.floor(userData[i].minsInLastHour < 60)) {
                             newData.push({
-                            label: i + " (" + "" + userData[i].minsInLastHour  + " mins" + ")",
-                            value: userData[i].minsInLastHour
+                                label: i + " (" + "" + userData[i].minsInLastHour  + " mins" + ")",
+                                value: userData[i].minsInLastHour
                             });
-                        }
-
-                        else{
+                        } else {
                             newData.push({
-                            label: i + " (" + "" + Math.floor(userData[i].minsInLastHour/60) + " hrs " + ")" + userData[i].minsInLastHour%60 + " mins ",
-                            value: userData[i].minsInLastHour
+                                label: i + " (" + "" + Math.floor(userData[i].minsInLastHour/60) + " hrs " + ")" + userData[i].minsInLastHour%60 + " mins ",
+                                value: userData[i].minsInLastHour
                             });
                         }
                     }
@@ -153,27 +154,7 @@ var Kufu = (Kufu === undefined) ? (function() {
         }
         chrome.storage.sync.set({
             Kufu_UserData: userData
-        }, function() {
-            updateTrackingView();
         });
-    }
-
-    /**
-     * Update the view for the data. 
-     */
-    function updateTrackingView() {
-        for (var i in userData) {
-
-            // Create the <li> element.
-            var li = document.createElement('li');
-            li.innerText = i + " - " + userData[i].minsInLastHour;
-
-            // Append it to active tabs list.
-            /*
-            var ul = document.getElementById('activeTabs');
-            ul.appendChild(li);
-            */
-        }
     }
 
     /**
@@ -187,26 +168,57 @@ var Kufu = (Kufu === undefined) ? (function() {
         var otherSum = 0;
         var sum = 0;
 
-        for(var i = 0; i < data.length; i++){
+        for (var i = 0; i < data.length; i++){
             sum += data[i].value;
         }
 
-        for(var i = 0; i < data.length; i++ ){
-            if(data[i].value/sum > 0.05 )
+        for (i = 0; i < data.length; i++){
+            console.log("Comparing " + data[i].value + " / " + sum + " = " + (data[i].value / sum).toFixed(3));
+            if (data[i].value / sum > OTHER_THRESHOLD) {
                 newData.push(data[i]);
-            else
+            } else {
                 otherSum += data[i].value;
+            }
         }
+
         newData.push({
             label: "Other",
             value: otherSum
         });
+
         return newData;
+    }
+
+    /**
+     * Sets the "Others" threshold percentage.
+     * @param {Integer} n - The percentage as an integer.
+     */
+    function setOtherThreshold(n) {
+        var val;
+        if (typeof n === "string") {
+            try {
+                val = parseInt(n);
+            } catch (err) {
+                val = 5;
+            }
+        } else if (typeof n !== "number") {
+            val = 5; 
+        }
+
+        if (n < 0) {
+            val = 0;
+        } else if (n > 100) {
+            val = 100;
+        }
+
+        OTHER_THRESHOLD = val / 100;
+        console.log("Set threshold to " + OTHER_THRESHOLD);
     }
 
     return {
         start: start,
         tryLoadUserData: tryLoadUserData,
-        updateStats: updateStats
+        updateStats: updateStats,
+        setOtherThreshold: setOtherThreshold
     };
 }()) : Kufu;
