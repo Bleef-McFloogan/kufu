@@ -41,10 +41,21 @@ var Kufu = (Kufu === undefined) ? (function() {
                     // Convert the data to the format needed by the D3 graph.
                     var newData = [];
                     for (var i in userData) {
-                        newData.push({
-                            label: i,
+                        // var hours;
+                        // var mins;
+                        if(Math.floor(userData[i].minsInLastHour < 60)){
+                            newData.push({
+                            label: i + " " + userData[i].minsInLastHour + " mins",
                             value: userData[i].minsInLastHour
-                        });
+                            });
+                        }
+
+                        else{
+                            newData.push({
+                            label: i + " " + Math.floor(userData[i].minsInLastHour/60) + " hrs " + userData[i].minsInLastHour%60 + " mins ",
+                            value: userData[i].minsInLastHour
+                            });
+                        }
                     }
 
                     newData = groupSmallValuesToOther(newData);
@@ -145,7 +156,7 @@ var Kufu = (Kufu === undefined) ? (function() {
     }
 
     /**
-     * Update the view for the data.
+     * Update the view for the data. 
      */
     function updateTrackingView() {
         for (var i in userData) {
