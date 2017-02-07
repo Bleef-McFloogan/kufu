@@ -36,7 +36,7 @@ var Kufu = (Kufu === undefined) ? (function() {
      * array.
      */
     function tryLoadUserData(callback) {
-        chrome.storage.sync.get("Kufu_UserData", function(items) {
+        chrome.storage.local.get("Kufu_UserData", function(items) {
             if (chrome.runtime.lastError) {
                 console.error(chrome.runtime.lastError);
             } else {
@@ -152,7 +152,7 @@ var Kufu = (Kufu === undefined) ? (function() {
                 lastUpdated: moment.now()
             }
         }
-        chrome.storage.sync.set({
+        chrome.storage.local.set({
             Kufu_UserData: userData
         });
     }
@@ -215,6 +215,7 @@ var Kufu = (Kufu === undefined) ? (function() {
         console.log("Set threshold to " + OTHER_THRESHOLD);
     }
 
+        chrome.storage.local.get("Kufu_UserData", function(items) {
     return {
         start: start,
         tryLoadUserData: tryLoadUserData,
