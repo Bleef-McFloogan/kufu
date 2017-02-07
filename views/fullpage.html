@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<head>
+    <title>Kufu</title>
+    <link rel="shortcut icon" href="/resources/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" type="text/css" href="/styles/fullpagestyle.css">
+    <script src="/libs/d3.js"></script>
+    <script src="/libs/moment.js"></script>
+    <script src="/src/Kufu.js"></script>
+</head>
+<body>
+    <div id="control-panel">
+        <label for="otherPercentage">"Other" Percentage Threshold:</label>
+        <input id="otherPercentage" type="text" name="otherPercentage" placeholder="5%">
+        <button id="controlPanelSubmit" type="button" name="submit">Submit</button>
+    </div>
+    <div id="container">
+        <div id="header">
+            <p>kufu</p>
+        </div>
+	<div id="graph-container"></div>
+    </div>
+    <img src="/resources/icon.png" class="myClass" alt="MyImage" title="MyImage" />
+    <script src="/src/KufuGraphFullPage.js"></script>
+    <script src="/src/main.js"></script>
+</body>
+</html>
