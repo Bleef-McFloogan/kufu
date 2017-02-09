@@ -1,6 +1,9 @@
 /** Kufu - A browser extension for time management and productivity tracking. */
 var Kufu = (Kufu === undefined) ? (function() {
 
+    /** Used to make sure the 1-minute alarm system can only be started once. */
+    var KUFU_STARTED = false;
+
     /**
      * The percentage that a piece of the pie must be for it not to be counted
      * as "Other".
@@ -12,8 +15,11 @@ var Kufu = (Kufu === undefined) ? (function() {
 
     /** Start all of the required services. */
     function start() {
-        tryLoadUserData();
-        startClock();
+        if (!KUFU_STARTED) {
+            tryLoadUserData();
+            startClock();
+            KUFU_STARTED = true;
+        }
     }
 
     /** Gets called every minute. */
