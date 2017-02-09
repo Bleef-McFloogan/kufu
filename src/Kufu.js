@@ -1,30 +1,22 @@
-/**
- * Kufu - A browser extension for time management and productivity tracking.
- */
+/** Kufu - A browser extension for time management and productivity tracking. */
 var Kufu = (Kufu === undefined) ? (function() {
 
     /**
      * The percentage that a piece of the pie must be for it not to be counted
-     * as "Other"
+     * as "Other".
      */
-    OTHER_THRESHOLD = 0.05;
+    var OTHER_THRESHOLD = 0.05;
 
-    /**
-     * Working copy of the user's data.
-     */
+    /** Working copy of the user's data. */
     var userData = {};
 
-    /**
-     * Start all of the required services.
-     */
+    /** Start all of the required services. */
     function start() {
         tryLoadUserData();
         startClock();
     }
 
-    /**
-     * Gets called every minute.
-     */
+    /** Gets called every minute. */
     function updateStats() {
         chrome.tabs.query({
             active: true
@@ -43,25 +35,29 @@ var Kufu = (Kufu === undefined) ? (function() {
                 if (items.hasOwnProperty("Kufu_UserData")) {
                     userData = items.Kufu_UserData;
 
-                    // Convert the data to the format needed by the D3 graph.
-                    var newData = [];
-                    for (var i in userData) {
-                        if (Math.floor(userData[i].minsInLastHour < 60)) {
-                            newData.push({
-                                label: i + " (" + "" + userData[i].minsInLastHour  + " mins" + ")",
-                                value: userData[i].minsInLastHour
-                            });
-                        } else {
-                            newData.push({
-                                label: i + " (" + "" + Math.floor(userData[i].minsInLastHour/60) + " hrs " + ")" + userData[i].minsInLastHour%60 + " mins ",
-                                value: userData[i].minsInLastHour
-                            });
-                        }
-                    }
-
-                    newData = groupSmallValuesToOther(newData);
-
                     if (typeof callback === "function") {
+
+                        // TODO: Move the below to the calling area. This 
+                        // should be more generic.
+
+                        // Convert the data to the format needed by the D3
+                        // graph.
+                        var newData = [];
+                        for (var i in userData) {
+                            if (Math.floor(userData[i].minsInLastHour < 60)) {
+                                newData.push({
+                                    label: i + " (" + "" + userData[i].minsInLastHour  + " mins" + ")",
+                                    value: userData[i].minsInLastHour
+                                });
+                            } else {
+                                newData.push({
+                                    label: i + " (" + "" + Math.floor(userData[i].minsInLastHour/60) + " hrs " + ")" + userData[i].minsInLastHour%60 + " mins ",
+                                    value: userData[i].minsInLastHour
+                                });
+                            }
+                        }
+
+                        newData = groupSmallValuesToOther(newData);
                         callback(newData);
                     }
                 } else {
@@ -71,9 +67,7 @@ var Kufu = (Kufu === undefined) ? (function() {
         });
     }
 
-    /**
-     * Start the timer to update the stats every n seconds.
-     */
+    /** Start the timer to update the stats every n seconds. */
     function startClock() {
         chrome.alarms.onAlarm.addListener(updateStats);
         chrome.alarms.create("Kufu_Tracker", {
@@ -195,6 +189,7 @@ var Kufu = (Kufu === undefined) ? (function() {
      */
     function setOtherThreshold(n) {
         var val;
+
         if (typeof n === "string") {
             try {
                 val = parseInt(n);
