@@ -216,11 +216,29 @@ var Kufu = (Kufu === undefined) ? (function() {
         console.log("Set threshold to " + OTHER_THRESHOLD);
     }
 
+    /**
+     * Prints the contents of the database to the console. Used for debugging.
+     */
+    function printDatabase() {
         chrome.storage.local.get("Kufu_UserData", function(items) {
+            if (chrome.runtime.lastError) {
+                console.error(chrome.runtime.lastError);
+            } else {
+                if (items.hasOwnProperty("Kufu_UserData")) {
+                    console.log("Printing Database:");
+                    console.dir(items.Kufu_UserData);
+                } else {
+                    console.warn("No entry in database called Kufu_UserData.");
+                }
+            }
+        });
+    }
+
     return {
         start: start,
         tryLoadUserData: tryLoadUserData,
         updateStats: updateStats,
-        setOtherThreshold: setOtherThreshold
+        setOtherThreshold: setOtherThreshold,
+        printDatabase: printDatabase
     };
 }()) : Kufu;
