@@ -4,6 +4,9 @@ var Kufu = (Kufu === undefined) ? (function() {
     /** Used to make sure the 1-minute alarm system can only be started once. */
     var KUFU_STARTED = false;
 
+    /** Used to make sure that a timestamp is only set once per minute. */
+    var LAST_TIMESTAMP = moment(moment.now());
+
     /**
      * The percentage that a piece of the pie must be for it not to be counted
      * as "Other".
@@ -16,6 +19,7 @@ var Kufu = (Kufu === undefined) ? (function() {
     /** Start all of the required services. */
     function start() {
         if (!KUFU_STARTED) {
+            console.log("Starting Kufu!");
             tryLoadUserData();
             startClock();
             KUFU_STARTED = true;
@@ -24,9 +28,35 @@ var Kufu = (Kufu === undefined) ? (function() {
 
     /** Gets called every minute. */
     function updateStats() {
+        var t, i;
+
         chrome.tabs.query({
             active: true
-        }, handleTabs);
+        }, handleActiveTabs);
+
+        for (var key in userData) {
+            if (userData[key].modified) {
+                userData[key].minsInLastHour = 0;
+                userData[key].minsInLastDay = 0;
+                userData[key].minsInLastWeek = 0;
+                userData[key].minsInLastMonth = 0;
+                userData[key].minsInLastYear = 0;
+                for (i = 0; i < userData[key].timestamps.length; i++) {
+                    t = moment(userData[key].timestamps[i]);
+                    if (!t.isBefore(moment.now(), 'hour'))
+                        userData[key].minsInLastHour++;
+                    if (!t.isBefore(moment.now(), 'day'))
+                        userData[key].minsInLastDay++;
+                    if (!t.isBefore(moment.now(), 'week'))
+                        userData[key].minsInLastWeek++;
+                    if (!t.isBefore(moment.now(), 'month'))
+                        userData[key].minsInLastMonth++;
+                    if (!t.isBefore(moment.now(), 'year'))
+                        userData[key].minsInLastYear++;
+                }
+                userData[key].modified = false;
+            }
+        }
     }
 
     /**
@@ -35,8 +65,9 @@ var Kufu = (Kufu === undefined) ? (function() {
      */
     function tryLoadUserData(callback) {
         chrome.storage.local.get("Kufu_UserData", function(items) {
-            if (chrome.runtime.lastError) {
-                console.error(chrome.runtime.lastError);
+            var error = chrome.runtime.lastError;
+            if (error) {
+                console.error(error);
             } else {
                 if (items.hasOwnProperty("Kufu_UserData")) {
                     userData = items.Kufu_UserData;
@@ -86,7 +117,7 @@ var Kufu = (Kufu === undefined) ? (function() {
      * and puts them into the views.
      * @param {Tab[]} tabs - The Tab objects from the chrome API. 
      */
-    function handleTabs(tabs) {
+    function handleActiveTabs(tabs) {
         for (var i = 0; i < tabs.length; i++) {
             checkWindow(tabs[i]);
         }
@@ -99,61 +130,55 @@ var Kufu = (Kufu === undefined) ? (function() {
      */
     function checkWindow(tab) {
         chrome.windows.get(tab.windowId, function(win) {
-            if (win.state !== "minimized") {
+            if (win.focused && win.state !== "minimized") {
                 updateTrackingValue(tab.title);
+            } else {
+                console.log("Not updating because window " + tab.windowId +
+                        " is not focused or is minimized.");
             }
         });
     }
 
     /**
      * Updates the tracking value of a page by one.
-     * @param {String} title - The title of the page.
+     * @param {String} key - The key of the page's entry in storage.
      */
-    function updateTrackingValue(title) {
-        if (
-            typeof userData === "object" &&
-            typeof userData[title] === "object"
-        ) {
-            var lastUpdated = moment(userData[title].lastUpdated);
-
-            if (lastUpdated.isBefore(moment.now(), 'minute')) {
-                console.log(moment(moment.now()).format("h:mm") + " - Adding one minute to " + title);
-                userData[title].minsInLastHour++;
-                userData[title].minsInLastDay++;
-                userData[title].minsInLastWeek++;
-                userData[title].minsInLastMonth++;
-                userData[title].minsInLastYear++;
-                userData[title].minsInAllTime++;
-
-                if (lastUpdated.isBefore(moment.now(), 'hour'))
-                    userData[title].minsInLastHour = 1;
-                if (lastUpdated.isBefore(moment.now(), 'day'))
-                    userData[title].minsInLastDay = 1;
-                if (lastUpdated.isBefore(moment.now(), 'week'))
-                    userData[title].minsInLastWeek = 1;
-                if (lastUpdated.isBefore(moment.now(), 'month'))
-                    userData[title].minsInLastMonth = 1;
-                if (lastUpdated.isBefore(moment.now(), 'year'))
-                    userData[title].minsInLastYear = 1;
-
-                userData[title].lastUpdated = moment.now();
+    function updateTrackingValue(key) {
+        if (LAST_TIMESTAMP.isBefore(moment.now() + 1, 'minute')) {
+            LAST_TIMESTAMP = moment(moment.now());
+            console.log(moment(moment.now()).format("h:mm") +
+                    " - Timestamping " + key);
+            if (userData.hasOwnProperty(key)) {
+                userData[key].timestamps.push(moment.now());
+                userData[key].modified = true;
+                userData[key].lastUpdated = moment.now();
+                userData[key].minsInAllTime++;
             } else {
-                console.log("Not updating due to having been updated less " +
-                        "than a minute ago.");
+                userData[key] = {
+                    minsInLastHour: 1,
+                    minsInLastDay: 1,
+                    minsInLastWeek: 1,
+                    minsInLastMonth: 1,
+                    minsInLastYear: 1,
+                    minsInAllTime: 1,
+                    timestamps: [moment.now()],
+                    modified: false,
+                    lastUpdated: moment.now()
+                }
             }
         } else {
-            userData[title] = {
-                minsInLastHour: 1,
-                minsInLastDay: 1,
-                minsInLastWeek: 1,
-                minsInLastMonth: 1,
-                minsInLastYear: 1,
-                minsInAllTime: 1,
-                lastUpdated: moment.now()
-            }
+            console.warn("Not updating due to having been updated less than " +
+                            "a minute ago.");
         }
+
+        // Store the new data.
         chrome.storage.local.set({
             Kufu_UserData: userData
+        }, function() {
+            var error = chrome.runtime.lastError;
+            if (error) {
+                console.error(error);
+            }
         });
     }
 
