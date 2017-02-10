@@ -28,35 +28,44 @@ var Kufu = (Kufu === undefined) ? (function() {
 
     /** Gets called every minute. */
     function updateStats() {
-        var t, i;
-
+        var t, i, diff;
         chrome.tabs.query({
             active: true
         }, handleActiveTabs);
-
         for (var key in userData) {
-            if (userData[key].modified) {
-                userData[key].minsInLastHour = 0;
-                userData[key].minsInLastDay = 0;
-                userData[key].minsInLastWeek = 0;
-                userData[key].minsInLastMonth = 0;
-                userData[key].minsInLastYear = 0;
-                for (i = 0; i < userData[key].timestamps.length; i++) {
-                    t = moment(userData[key].timestamps[i]);
-                    if (!t.isBefore(moment.now(), 'hour'))
-                        userData[key].minsInLastHour++;
-                    if (!t.isBefore(moment.now(), 'day'))
-                        userData[key].minsInLastDay++;
-                    if (!t.isBefore(moment.now(), 'week'))
-                        userData[key].minsInLastWeek++;
-                    if (!t.isBefore(moment.now(), 'month'))
-                        userData[key].minsInLastMonth++;
-                    if (!t.isBefore(moment.now(), 'year'))
-                        userData[key].minsInLastYear++;
-                }
-                userData[key].modified = false;
+            userData[key].minsInLastHour = 0;
+            userData[key].minsInLastDay = 0;
+            userData[key].minsInLastWeek = 0;
+            userData[key].minsInLastMonth = 0;
+            userData[key].minsInLastYear = 0;
+            for (i = 0; i < userData[key].timestamps.length; i++) {
+                t = moment(userData[key].timestamps[i]);
+                diff = Math.abs(t.diff(moment.now()) / 1000 / 60 / 60);
+                if (diff < 1)
+                    userData[key].minsInLastHour++;
+                if (diff /= 24 < 1)
+                    userData[key].minsInLastDay++;
+                if (diff / 7 < 1)
+                    userData[key].minsInLastWeek++;
+                if (diff / 30.5 < 1) // FIXME?
+                    userData[key].minsInLastMonth++;
+                if (diff / 365 < 1) // FIXME?
+                    userData[key].minsInLastYear++;
             }
         }
+        storeData();
+    }
+
+    // Persists the local user data to storage.
+    function storeData() {
+        chrome.storage.local.set({
+            Kufu_UserData: userData
+        }, function() {
+            var error = chrome.runtime.lastError;
+            if (error) {
+                console.error(error);
+            }
+        });
     }
 
     /**
@@ -71,7 +80,7 @@ var Kufu = (Kufu === undefined) ? (function() {
             } else {
                 if (items.hasOwnProperty("Kufu_UserData")) {
                     userData = items.Kufu_UserData;
-
+                    updateStats();
                     if (typeof callback === "function") {
 
                         // TODO: Move the below to the calling area. This 
@@ -81,19 +90,12 @@ var Kufu = (Kufu === undefined) ? (function() {
                         // graph.
                         var newData = [];
                         for (var i in userData) {
-                            if (Math.floor(userData[i].minsInLastHour < 60)) {
-                                newData.push({
-                                    label: i + " (" + "" + userData[i].minsInLastHour  + " mins" + ")",
-                                    value: userData[i].minsInLastHour
-                                });
-                            } else {
-                                newData.push({
-                                    label: i + " (" + "" + Math.floor(userData[i].minsInLastHour/60) + " hrs " + ")" + userData[i].minsInLastHour%60 + " mins ",
-                                    value: userData[i].minsInLastHour
-                                });
-                            }
+                            newData.push({
+                                label: i + " (" + userData[i].minsInLastHour +
+                                        " mins)",
+                                value: userData[i].minsInLastHour
+                            });
                         }
-
                         newData = groupSmallValuesToOther(newData);
                         callback(newData);
                     }
@@ -150,7 +152,6 @@ var Kufu = (Kufu === undefined) ? (function() {
                     " - Timestamping " + key);
             if (userData.hasOwnProperty(key)) {
                 userData[key].timestamps.push(moment.now());
-                userData[key].modified = true;
                 userData[key].lastUpdated = moment.now();
                 userData[key].minsInAllTime++;
             } else {
@@ -162,24 +163,14 @@ var Kufu = (Kufu === undefined) ? (function() {
                     minsInLastYear: 1,
                     minsInAllTime: 1,
                     timestamps: [moment.now()],
-                    modified: false,
                     lastUpdated: moment.now()
                 }
             }
+            storeData();
         } else {
             console.warn("Not updating due to having been updated less than " +
                             "a minute ago.");
         }
-
-        // Store the new data.
-        chrome.storage.local.set({
-            Kufu_UserData: userData
-        }, function() {
-            var error = chrome.runtime.lastError;
-            if (error) {
-                console.error(error);
-            }
-        });
     }
 
     /**
@@ -192,25 +183,24 @@ var Kufu = (Kufu === undefined) ? (function() {
         var newData = [];
         var otherSum = 0;
         var sum = 0;
-
         for (var i = 0; i < data.length; i++){
             sum += data[i].value;
         }
-
-        for (i = 0; i < data.length; i++){
-            console.log("Comparing " + data[i].value + " / " + sum + " = " + (data[i].value / sum).toFixed(3));
-            if (data[i].value / sum > OTHER_THRESHOLD) {
-                newData.push(data[i]);
-            } else {
-                otherSum += data[i].value;
+        if (sum > 0) {
+            for (i = 0; i < data.length; i++){
+                console.log("Comparing " + data[i].value + " / " + sum + " = " +
+                        (data[i].value / sum).toFixed(3));
+                if (data[i].value / sum > OTHER_THRESHOLD) {
+                    newData.push(data[i]);
+                } else {
+                    otherSum += data[i].value;
+                }
             }
+            newData.push({
+                label: "Other (" + otherSum + " mins)",
+                value: otherSum
+            });
         }
-
-        newData.push({
-            label: "Other",
-            value: otherSum
-        });
-
         return newData;
     }
 
@@ -230,13 +220,11 @@ var Kufu = (Kufu === undefined) ? (function() {
         } else if (typeof n !== "number") {
             val = 5; 
         }
-
         if (n < 0) {
             val = 0;
         } else if (n > 100) {
             val = 100;
         }
-
         OTHER_THRESHOLD = val / 100;
         console.log("Set threshold to " + OTHER_THRESHOLD);
     }
