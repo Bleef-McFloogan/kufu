@@ -4,15 +4,25 @@
     <title>Kufu</title>
     <link rel="shortcut icon" href="/resources/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" type="text/css" href="/styles/fullpagestyle.css">
+    <link rel="stylesheet" type="text/css" href="/libs/bootstrap.min.css">
     <script src="/libs/d3.js"></script>
     <script src="/libs/moment.js"></script>
+    <script src="/libs/jquery.js"></script>
     <script src="/src/Kufu.js"></script>
 </head>
 <body>
     <div id="control-panel">
-        <label for="otherPercentage">"Other" Percentage Threshold:</label>
-        <input id="otherPercentage" type="text" name="otherPercentage" placeholder="5%">
-        <button id="controlPanelSubmit" type="button" name="submit">Submit</button>
+        <button id="control-panel-toggle-btn">+</button>
+        <div id="control-panel-inner">
+            <form class="form-inline">
+                <label for="other-percentage" class="mr-sm-2">Other %:</label>
+                <input type="number" class="form-control mb-2 mr-sm-2 mb-sm-0" id="other-percentage" value="5">
+                <button type="button" id="other-percentage-submit" class="btn btn-primary">Submit</button>
+            </form>
+            <form class="form-inline">
+                <button id="erase-data-btn" type="button" class="btn btn-danger">Erase Data</button>
+            </form>
+        </div>
     </div>
     <div id="container">
         <div id="header">

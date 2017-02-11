@@ -247,11 +247,39 @@ var Kufu = (Kufu === undefined) ? (function() {
         });
     }
 
+    /** Erases all of the Kufu data in the database. */
+    function eraseData() {
+        if (confirm("Are you sure you want to delete all of your stored data?" +
+                    " This cannot be undone."))
+        {
+            chrome.storage.local.remove("Kufu_UserData", function() {
+                var error = chrome.runtime.lastError;
+                if (error) {
+                    console.error(error);
+                } else {
+                    alert("Successfully cleared stored data.");
+                    userData = {};
+                }
+            });
+        }
+    }
+
+    /*
+     * Make sure that every page running Kufu will delete their local copies of
+     * the data if the user tries to erase their stored data.
+     */
+    chrome.storage.onChanged.addListener(function(changes) {
+        if (changes.hasOwnProperty("Kufu_UserData")) {
+            userData = changes.Kufu_UserData.newValue || {};
+        }
+    });
+
     return {
         start: start,
         tryLoadUserData: tryLoadUserData,
         updateStats: updateStats,
         setOtherThreshold: setOtherThreshold,
-        printDatabase: printDatabase
+        printDatabase: printDatabase,
+        eraseData: eraseData
     };
 }()) : Kufu;
