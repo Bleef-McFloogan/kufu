@@ -1,15 +1,18 @@
-@import url('https://fonts.googleapis.com/css?family=Hind&Open+Sans')
+/*@import url('https://fonts.googleapis.com/css?family=Hind&Open+Sans')*/
+@import url('https://fonts.googleapis.com/css?family=Shadows+Into+Light')
 
 #header {
     background-color: #fff;
     color: #CF2CC8;
-    font-family: 'Hind', sans-serif;
+    /*font-family: 'Hind', sans-serif;*/
+    font-family: "Shadows Into Light", cursive;
 }
 
 #header > p {
-    font-size: 56px;
+    font-size: 40px;
     text-align: center;
     color: #CF2CC8;
+    font-family: "Shadows Into Light", cursive;
 }
 
 body {
@@ -81,3 +84,17 @@ svg {
     cursor: pointer;
     border-radius: 5px;
 }
+
+#quote {
+    display: block;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    margin-left: 40px;
+    margin-right: 40px;
+    text-align: center;
+    font-size: 1.3rem;
+    font-style: italic;
+    color: #555;
+    font-family: 'Crimson Text', serif;
+}
+

@@ -38,3 +38,52 @@ submit.addEventListener('click', function(evt) {
     updateChart();
     centerChart();
 });
+
+var quotes = [
+    {
+        text: "“The perfect is the enemy of the good.” - Voltaire",
+    },
+    {
+        text: "“The way to get started is to quit talking and begin doing.” – Walt Disney",
+    },
+    {
+        text: "“It’s not that I’m so smart, it’s just that I stay with problems longer. – Albert Einstein",
+    },
+    {
+        text: "“Sometimes, things may not go your way, but the effort should be there every single night.” – Michael Jordan",
+    },
+    {
+        text: "“How poor are they that have not patience! What wound did ever heal but by degrees?” – William Shakespeare",
+    },
+    {
+        text: "“Amateurs sit and wait for inspiration, the rest of us just get up and go to work.” - Stephen King",
+    },
+    {
+        text: "“The mind is everything. What you think you become.” – Buddha",
+    },
+    {
+        text: "“Either write something worth reading or do something worth writing.” - Benjamin Franklin",
+    },
+    {
+        text: "“If you spend too much time thinking about a thing, you’ll never get it done.” - Bruce Lee",
+    },
+    {
+        text: "“Action is the foundational key to all success.” - Pablo Picasso",
+    },
+    {
+        text: "“Absorb what is useful, reject what is useless, add what is specifically your own.” - Bruce Lee",
+    },
+    {
+        text: "“It is not the strongest of the species that survive, nor the most intelligent, but the one most responsive to change.” - Charles Darwin",
+    },
+    {
+        text: "“There is no substitute for hard work.” - Thomas Edison",
+    },
+    {
+        text: "“Success is a lousy teacher. It seduces smart people into thinking they can't lose.” - Bill Gates",
+    }
+];
+
+var quote = quotes[Math.floor(Math.random() * quotes.length)];
+document.getElementById("quote").innerHTML = '<p>' + quote.text + '</p>';
+
