@@ -102,6 +102,19 @@ svg {
     animation: Controller-Expand-Reverse 0.5s forwards;
 }
 
+#quote {
+    display: block;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    margin-left: 40px;
+    margin-right: 40px;
+    text-align: center;
+    font-size: 1.3rem;
+    font-style: italic;
+    color: #555;
+    font-family: 'Crimson Text', serif;
+}
+
 @keyframes Controller-Expand {
     0% {
         height: 45px;
