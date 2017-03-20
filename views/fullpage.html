@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+<head>
+    <title>Kufu</title>
+    <link rel="shortcut icon" href="/resources/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" type="text/css" href="/styles/fullpagestyle.css">
+    <link rel="stylesheet" type="text/css" href="/libs/bootstrap.min.css">
+    <script src="/libs/d3.js"></script>
+    <script src="/libs/moment.js"></script>
+    <script src="/libs/jquery.js"></script>
+    <script src="/src/Kufu.js"></script>
+</head>
+<body>
+    <div id="control-panel">
+        <button id="control-panel-toggle-btn">+</button>
+        <div id="control-panel-inner">
+            <form class="form-inline">
+                <label for="other-percentage" class="mr-sm-2">Other %:</label>
+                <input type="number" class="form-control mb-2 mr-sm-2 mb-sm-0" id="other-percentage" value="5">
+                <button type="button" id="other-percentage-submit" class="btn btn-primary">Submit</button>
+            </form>
+            <form class="form-inline">
+                <button id="erase-data-btn" type="button" class="btn btn-danger">Erase Data</button>
+            </form>
+        </div>
+    </div>
+    <div id="container">
+        <div id="header">
+            <p>kufu</p>
+        </div>
+	<div id="graph-container"></div>
+    </div>
+    <img src="/resources/icon.png" class="myClass" alt="MyImage" title="MyImage" />
+    <script src="/src/KufuGraphFullPage.js"></script>
+    <script src="/src/main.js"></script>
+</body>
+</html>
