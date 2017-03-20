@@ -7,6 +7,9 @@ var Kufu = (Kufu === undefined) ? (function() {
     /** Used to make sure that a timestamp is only set once per minute. */
     var LAST_TIMESTAMP = moment(moment.now());
 
+    /** The timeline for which to display the results. */
+    var TIMELINE = "Hour";
+
     /**
      * The percentage that a piece of the pie must be for it not to be counted
      * as "Other".
@@ -29,6 +32,7 @@ var Kufu = (Kufu === undefined) ? (function() {
     /** Gets called every minute. */
     function updateStats() {
         var t, i, diff;
+        TIMELINE = $("#timeline").val();
         chrome.tabs.query({
             active: true
         }, handleActiveTabs);
@@ -43,8 +47,9 @@ var Kufu = (Kufu === undefined) ? (function() {
                 diff = Math.abs(t.diff(moment.now()) / 1000 / 60 / 60);
                 if (diff < 1)
                     userData[key].minsInLastHour++;
-                if (diff /= 24 < 1)
+                if (diff / 24 < 1)
                     userData[key].minsInLastDay++;
+                diff = diff / 24;
                 if (diff / 7 < 1)
                     userData[key].minsInLastWeek++;
                 if (diff / 30.5 < 1) // FIXME?
@@ -90,10 +95,11 @@ var Kufu = (Kufu === undefined) ? (function() {
                         // graph.
                         var newData = [];
                         for (var i in userData) {
+                            // console.log("minsInLast" + TIMELINE + ": " + userData[i]["minsInLast" + TIMELINE]);
                             newData.push({
-                                label: i + " (" + userData[i].minsInLastHour +
+                                label: i + " (" + userData[i]["minsInLast" + TIMELINE] +
                                         " mins)",
-                                value: userData[i].minsInLastHour
+                                value: userData[i]["minsInLast" + TIMELINE]
                             });
                         }
                         newData = groupSmallValuesToOther(newData);
@@ -188,8 +194,6 @@ var Kufu = (Kufu === undefined) ? (function() {
         }
         if (sum > 0) {
             for (i = 0; i < data.length; i++){
-                console.log("Comparing " + data[i].value + " / " + sum + " = " +
-                        (data[i].value / sum).toFixed(3));
                 if (data[i].value / sum > OTHER_THRESHOLD) {
                     newData.push(data[i]);
                 } else {

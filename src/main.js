@@ -58,3 +58,5 @@ cPanelBtn.addEventListener("click", function() {
 
 var eraseDataBtn = document.getElementById("erase-data-btn");
 eraseDataBtn.addEventListener("click", Kufu.eraseData);
+
+$('.dropdown-toggle').dropdown()
