@@ -27,6 +27,7 @@ function centerChart() {
         svg.style.opacity = 1;
         g.setAttribute("transform", "translate(" + (bb.width - thatWidth) +
                 ", " + height + ")");
+        $("#placeholder_text").hide()
     }, 1000);
 }
 
