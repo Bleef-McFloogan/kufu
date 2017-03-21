@@ -89,11 +89,11 @@ var Kufu = (Kufu === undefined) ? (function() {
                         // Convert the data to the format needed by the D3
                         // graph.
                         var newData = [];
-                        for (var i in userData) {
+                        for (var key in userData) {
                             newData.push({
-                                label: i + " (" + userData[i].minsInLastHour +
-                                        " mins)",
-                                value: userData[i].minsInLastHour
+                                label: userData[key].domain+ " (" + userData[key].minsInLastHour +
+                                       " mins)",
+                                value: userData[key].minsInLastHour
                             });
                         }
                         newData = groupSmallValuesToOther(newData);
@@ -133,7 +133,7 @@ var Kufu = (Kufu === undefined) ? (function() {
     function checkWindow(tab) {
         chrome.windows.get(tab.windowId, function(win) {
             if (win.focused && win.state !== "minimized") {
-                updateTrackingValue(tab.title);
+                updateTrackingValue(tab.url);
             } else {
                 console.log("Not updating because window " + tab.windowId +
                         " is not focused or is minimized.");
@@ -156,6 +156,7 @@ var Kufu = (Kufu === undefined) ? (function() {
                 userData[key].minsInAllTime++;
             } else {
                 userData[key] = {
+                    domain: extractDomain(key),
                     minsInLastHour: 1,
                     minsInLastDay: 1,
                     minsInLastWeek: 1,
@@ -172,6 +173,22 @@ var Kufu = (Kufu === undefined) ? (function() {
                             "a minute ago.");
         }
     }
+
+    function extractDomain(url) {
+    var domain;
+    //find & remove protocol (http, ftp, etc.) and get domain
+    if (url.indexOf("://") > -1) {
+        domain = url.split('/')[2];
+    }
+    else {
+        domain = url.split('/')[0];
+    }
+
+    //find & remove port number
+    domain = domain.split(':')[0];
+
+    return domain;
+}
 
     /**
      * Calculate the items with values that are below some percentage threshold
@@ -239,7 +256,8 @@ var Kufu = (Kufu === undefined) ? (function() {
             } else {
                 if (items.hasOwnProperty("Kufu_UserData")) {
                     console.log("Printing Database:");
-                    console.dir(items.Kufu_UserData);
+                    //console.dir(items.Kufu_UserData);
+                    console.log(JSON.stringify(items.Kufu_UserData));
                 } else {
                     console.warn("No entry in database called Kufu_UserData.");
                 }
