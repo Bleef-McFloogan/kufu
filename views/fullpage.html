@@ -8,6 +8,7 @@
     <script src="/libs/d3.js"></script>
     <script src="/libs/moment.js"></script>
     <script src="/libs/jquery.js"></script>
+    <script src="/libs/bootstrap.min.js"></script>
     <script src="/src/Kufu.js"></script>
 </head>
 <body>
@@ -21,6 +22,16 @@
             </form>
             <form class="form-inline">
                 <button id="erase-data-btn" type="button" class="btn btn-danger">Erase Data</button>
+            </form>
+            <form class="form-inline">
+                <select id="timeline" class="btn btn-default">
+                    <option value="Hour" selected>Last Hour</option>
+                    <option value="Day">Last Day</option>
+                    <option value="Week">Last Week</option>
+                    <option value="Month">Last Month</option>
+                    <option value="Year">Last Year</option>
+                    <option value="AllTime">All Time</option>
+                </select>
             </form>
         </div>
     </div>

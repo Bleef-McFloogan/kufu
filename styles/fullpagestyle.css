@@ -102,6 +102,11 @@ svg {
     animation: Controller-Expand-Reverse 0.5s forwards;
 }
 
+select {
+    padding: 0.5rem 0.75rem;
+    outline: none;
+}
+
 #quote {
     display: block;
     margin-top: 1em;
@@ -121,14 +126,14 @@ svg {
         width: 45px;
     }
     100% {
-        height: 193px;
+        height: 393px;
         width: 450px;
     }
 }
 
 @keyframes Controller-Expand-Reverse {
     0% {
-        height: 193px;
+        height: 393px;
         width: 450px;
     }
     100% {
