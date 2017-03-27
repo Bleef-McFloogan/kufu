@@ -3,7 +3,7 @@ function populateTable(list) {
         var tr = document.createElement("tr");
         var nameElm = document.createElement("td");
         var valueElm = document.createElement("td");
-        var table1 = document.getElementById("timeTables");
+        var table1 = document.getElementById("timeTable");
         nameElm.innerHTML = list[i].label;
         valueElm.innerHTML = list[i].value;
         tr.appendChild(nameElm);
