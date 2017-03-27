@@ -1,3 +1,6 @@
+//ALEX!!!! GO TO LINE 94
+
+
 /** Kufu - A browser extension for time management and productivity tracking. */
 var Kufu = (Kufu === undefined) ? (function() {
 
@@ -89,14 +92,16 @@ var Kufu = (Kufu === undefined) ? (function() {
                         // Convert the data to the format needed by the D3
                         // graph.
                         var newData = [];
+                        var newDataHash = {};
                         for (var key in userData) {
-                            newData.push({
-                                label: userData[key].domain+ " (" + userData[key].minsInLastHour +
-                                       " mins)",
-                                value: userData[key].minsInLastHour
-                            });
+                            if(!(userData[key].domain in newDataHash)) {
+                                newDataHash[userData[key].domain] = {domain : userData[key].domain, mins_in_last_hour: userData[key].minsInLastHour};
+                            }
+                            else{
+                                newDataHash[userData[key].domain].mins_in_last_hour += userData[key].minsInLastHour;
+                            }
                         }
-                        newData = groupSmallValuesToOther(newData);
+                        newData = groupSmallValuesToOther(newDataHash);
                         callback(newData);
                     }
                 } else {
@@ -196,21 +201,23 @@ var Kufu = (Kufu === undefined) ? (function() {
      * individual values.
      * @param {Object[]} data - The data to group the small items for.
      */
-    function groupSmallValuesToOther(data) {
+    function groupSmallValuesToOther(data) { //I'm not sure if the hashmap syntax is correct
         var newData = [];
         var otherSum = 0;
-        var sum = 0;
-        for (var i = 0; i < data.length; i++){
-            sum += data[i].value;
-        }
-        if (sum > 0) {
-            for (i = 0; i < data.length; i++){
-                console.log("Comparing " + data[i].value + " / " + sum + " = " +
-                        (data[i].value / sum).toFixed(3));
-                if (data[i].value / sum > OTHER_THRESHOLD) {
-                    newData.push(data[i]);
+        var totalSum = 0;
+        for (var i in data)
+            totalSum += data[i].mins_in_last_hour;
+        if (totalSum > 0) {
+            for (i in data){
+                console.log("Comparing " + data[i].mins_in_last_hour + " / " + totalSum + " = " +
+                        (data[i].mins_in_last_hour / totalSum).toFixed(3));
+                if (data[i].mins_in_last_hour / totalSum > OTHER_THRESHOLD) {
+                    newData.push({
+                        label: data[i].domain + " (" + data[i].mins_in_last_hour + " mins)",
+                        value: data[i].mins_in_last_hour
+                        });
                 } else {
-                    otherSum += data[i].value;
+                    otherSum += data[i].mins_in_last_hour;
                 }
             }
             newData.push({
