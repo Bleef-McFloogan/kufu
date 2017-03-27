@@ -32,7 +32,10 @@ var Kufu = (Kufu === undefined) ? (function() {
     /** Gets called every minute. */
     function updateStats() {
         var t, i, diff;
-        TIMELINE = $("#timeline").val();
+        timelineElm = document.getElementById("timeline");
+        if(timelineElm && timelineElm.value){
+            TIMELINE = timelineElm.value;
+        }
         chrome.tabs.query({
             active: true
         }, handleActiveTabs);
