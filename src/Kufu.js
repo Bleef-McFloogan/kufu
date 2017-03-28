@@ -1,6 +1,3 @@
-//ALEX!!!! GO TO LINE 94
-
-
 /** Kufu - A browser extension for time management and productivity tracking. */
 var Kufu = (Kufu === undefined) ? (function() {
 
@@ -108,7 +105,7 @@ var Kufu = (Kufu === undefined) ? (function() {
                                     newDataHash[userData[key].domain].mins_in_last_hour += userData[key].minsInLastHour;
                                 }
                             }
-                            else if(GROUPING == "url-grouping"){//error with this else if, doesn't seem to get to the groupSmallValuesToOther function
+                            else if(GROUPING == "url-grouping"){
                                     newDataHash[String(key)] = {grouping: String(key), mins_in_last_hour: userData[key].minsInLastHour};
                             }
                         }
@@ -212,7 +209,7 @@ var Kufu = (Kufu === undefined) ? (function() {
      * individual values.
      * @param {Object[]} data - The data to group the small items for.
      */
-    function groupSmallValuesToOther(data) { //I'm not sure if the hashmap syntax is correct
+    function groupSmallValuesToOther(data) {
         var newData = [];
         var otherSum = 0;
         var totalSum = 0;
