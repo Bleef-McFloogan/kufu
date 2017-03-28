@@ -10,6 +10,12 @@ var Kufu = (Kufu === undefined) ? (function() {
     /** The timeline for which to display the results. */
     var TIMELINE = "Hour";
 
+    /** The allowed event listener names. */
+    var EVENTS = ["dataChange"];
+    var EVENT_LISTENERS = {
+        dataChange: []
+    };
+
     /**
      * The percentage that a piece of the pie must be for it not to be counted
      * as "Other".
@@ -32,10 +38,6 @@ var Kufu = (Kufu === undefined) ? (function() {
     /** Gets called every minute. */
     function updateStats() {
         var t, i, diff;
-        timelineElm = document.getElementById("timeline");
-        if(timelineElm && timelineElm.value){
-            TIMELINE = timelineElm.value;
-        }
         chrome.tabs.query({
             active: true
         }, handleActiveTabs);
@@ -80,7 +82,7 @@ var Kufu = (Kufu === undefined) ? (function() {
      * Try to load the user's data. If they don't have any, returns an empty
      * array.
      */
-    function tryLoadUserData(callback) {
+    function tryLoadUserData() {
         chrome.storage.local.get("Kufu_UserData", function(items) {
             var error = chrome.runtime.lastError;
             if (error) {
@@ -89,25 +91,7 @@ var Kufu = (Kufu === undefined) ? (function() {
                 if (items.hasOwnProperty("Kufu_UserData")) {
                     userData = items.Kufu_UserData;
                     updateStats();
-                    if (typeof callback === "function") {
-
-                        // TODO: Move the below to the calling area. This 
-                        // should be more generic.
-
-                        // Convert the data to the format needed by the D3
-                        // graph.
-                        var newData = [];
-                        for (var i in userData) {
-                            // console.log("minsInLast" + TIMELINE + ": " + userData[i]["minsInLast" + TIMELINE]);
-                            newData.push({
-                                label: i + " (" + userData[i]["minsInLast" + TIMELINE] +
-                                        " mins)",
-                                value: userData[i]["minsInLast" + TIMELINE]
-                            });
-                        }
-                        newData = groupSmallValuesToOther(newData);
-                        callback(newData);
-                    }
+                    triggerEvent("dataChange");
                 } else {
                     userData = {};
                 }
@@ -176,6 +160,7 @@ var Kufu = (Kufu === undefined) ? (function() {
                 }
             }
             storeData();
+            triggerEvent("dataChange");
         } else {
             console.warn("Not updating due to having been updated less than " +
                             "a minute ago.");
@@ -204,7 +189,7 @@ var Kufu = (Kufu === undefined) ? (function() {
                 }
             }
             newData.push({
-                label: "Other (" + otherSum + " mins)",
+                label: "Other (" + getPrettyTime(otherSum) + ")",
                 value: otherSum
             });
         }
@@ -281,12 +266,163 @@ var Kufu = (Kufu === undefined) ? (function() {
         }
     });
 
+    /**
+     * @param {Number} Some number of minutes.
+     * @returns A human-readable time value for the given number of minutes.
+     */
+    function getPrettyTime(mins) {
+        var minsInDay = 60 * 24;
+        var minsInWeek = minsInDay * 7;
+        var minsInMonth = minsInDay * 30.5;
+        var minsInYear = minsInMonth * 12;
+        var years = 0;
+        var months = 0;
+        var weeks = 0;
+        var days = 0;
+        var hours = 0;
+        var msg = "";
+        while (mins > minsInYear) {
+            years++;
+            mins -= minsInYear;
+        }
+        while (mins > minsInMonth) {
+            months++;
+            mins -= minsInMonth;
+        }
+        while (mins > minsInWeek) {
+            weeks++;
+            mins -= minsInWeek;
+        }
+        while (mins > minsInDay) {
+            days++;
+            mins -= minsInDay;
+        }
+        while (mins > 60) {
+            hours++;
+            mins -= 60;
+        }
+        if (years > 0) {
+            msg += years + (years === 1 ? " year, " : " years, ");
+        }
+        if (months > 0) {
+            msg += months + (months === 1 ? " month, " : " months, ");
+        }
+        if (weeks > 0) {
+            msg += weeks + (weeks === 1 ? " week, " : " weeks, ");
+        }
+        if (days > 0) {
+            msg += days + (days === 1 ? " day, " : " days, ");
+        }
+        if (hours > 0) {
+            msg += hours + (hours === 1 ? " hour, " : " hours, ");
+        }
+        msg += mins + (mins === 1 ? " min" : " mins");
+        return msg;
+    }
+
+    /**
+     * Update the config parameters based on what the user has set them to in
+     * the control panel.
+     */
+    function updateConfigParamters() {
+        timelineElm = document.getElementById("timeline");
+        if (timelineElm && timelineElm.value) {
+            TIMELINE = timelineElm.value;
+        }
+    }
+
+    /**
+     * @returns The user's data in a format suited to graphing. The format is as
+     * follows:
+     * [{
+     *     {String} label,
+     *     {Number} value
+     * }]
+     */
+    function getData() {
+        updateConfigParamters();
+        var newData = [];
+        var time, datum;
+        for (var i in userData) {
+            datum = userData[i]["minsInLast" + TIMELINE];
+            time = getPrettyTime(datum);
+            newData.push({
+                label: i + " (" + time + ")",
+                value: datum
+            });
+        }
+        newData = groupSmallValuesToOther(newData);
+        return newData;
+    }
+
+    /**
+     * Adds an event listener to Kufu. The available events are in EVENTS.
+     * @param {String} eventName - The name of the event
+     * @param {Function} listener - The function to be called when the event is
+     * triggered.
+     */
+    function addEventListener(eventName, listener) {
+        if (typeof eventName !== "string") {
+            throw new Error("First argument must be a string!");
+            return;
+        }
+        if (typeof listener !== "function") {
+            throw new Error("Second argument must be a function!");
+            return;
+        }
+        if (EVENTS.indexOf(eventName) === -1) {
+            var msg = eventName + " is not a valid event name!" +
+                    " Possible event names are: ";
+            for (var i = 0; i < EVENTS.length; i++) {
+                if (i === EVENTS.length - 1) {
+                    msg += EVENTS[i];
+                } else {
+                    msg += EVENTS[i] + ", ";
+                }
+            }
+            throw new Error(msg);
+        } else {
+            EVENT_LISTENERS[eventName].push(listener);
+        }
+    }
+
+    /**
+     * Call all of the event listeners for the given event.
+     * @param {String} eventName - The name of the event to call the listeners
+     * for.
+     */
+    function triggerEvent(eventName) {
+        console.log("Event " + eventName + " triggered.");
+        if (typeof eventName !== "string") {
+            throw new Error("First argument must be a string!");
+            return;
+        }
+        if (EVENTS.indexOf(eventName) === -1) {
+            var msg = eventName + " is not a valid event name!" +
+                    " Possible event names are: ";
+            for (var i = 0; i < EVENTS.length; i++) {
+                if (i === EVENTS.length - 1) {
+                    msg += EVENTS[i];
+                } else {
+                    msg += EVENTS[i] + ", ";
+                }
+            }
+            throw new Error(msg);
+        } else {
+            for (var i = 0; i < EVENT_LISTENERS[eventName].length; i++) {
+                EVENT_LISTENERS[eventName][i]();
+            }
+        }
+    }
+
     return {
         start: start,
         tryLoadUserData: tryLoadUserData,
         updateStats: updateStats,
         setOtherThreshold: setOtherThreshold,
         printDatabase: printDatabase,
-        eraseData: eraseData
+        eraseData: eraseData,
+        getData: getData,
+        addEventListener: addEventListener
     };
 }()) : Kufu;

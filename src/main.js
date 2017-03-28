@@ -1,10 +1,9 @@
 function updateChart() {
-    Kufu.tryLoadUserData(function(data) {
-        KufuGraph.setGraphData(data);
-    });
+    KufuGraph.setGraphData(Kufu.getData());
 }
 
-updateChart();
+Kufu.addEventListener("dataChange", updateChart);
+Kufu.start();
 
 function centerChart() {
     var g = KufuGraph.getSvg()[0][0];
