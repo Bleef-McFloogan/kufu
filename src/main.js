@@ -1,8 +1,10 @@
 function updateChart() {
-    Kufu.tryLoadUserData(function(data) {
-        KufuGraph.setGraphData(data);
+    Kufu.addEventListener("dataChange", function() {
+        KufuGraph.setGraphData(Kufu.getData());
     });
 }
+
+Kufu.start();
 
 updateChart();
 
