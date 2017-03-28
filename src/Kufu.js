@@ -16,6 +16,8 @@ var Kufu = (Kufu === undefined) ? (function() {
      */
     var OTHER_THRESHOLD = 0.05;
 
+    var GROUPING;
+
     /** Working copy of the user's data. */
     var userData = {};
 
@@ -32,6 +34,10 @@ var Kufu = (Kufu === undefined) ? (function() {
     /** Gets called every minute. */
     function updateStats() {
         var t, i, diff;
+        groupingElm = document.getElementById("grouping-selection");
+        if(groupingElm && groupingElm.value){
+            GROUPING = groupingElm.value;
+        }
         chrome.tabs.query({
             active: true
         }, handleActiveTabs);
@@ -94,11 +100,16 @@ var Kufu = (Kufu === undefined) ? (function() {
                         var newData = [];
                         var newDataHash = {};
                         for (var key in userData) {
-                            if(!(userData[key].domain in newDataHash)) {
-                                newDataHash[userData[key].domain] = {domain : userData[key].domain, mins_in_last_hour: userData[key].minsInLastHour};
+                            if(GROUPING == "domain-grouping"){
+                                if(!(userData[key].domain in newDataHash)) {
+                                    newDataHash[userData[key].domain] = {grouping : userData[key].domain, mins_in_last_hour: userData[key].minsInLastHour};
+                                }
+                                else{
+                                    newDataHash[userData[key].domain].mins_in_last_hour += userData[key].minsInLastHour;
+                                }
                             }
-                            else{
-                                newDataHash[userData[key].domain].mins_in_last_hour += userData[key].minsInLastHour;
+                            else if(GROUPING == "url-grouping"){//error with this else if, doesn't seem to get to the groupSmallValuesToOther function
+                                    newDataHash[String(key)] = {grouping: String(key), mins_in_last_hour: userData[key].minsInLastHour};
                             }
                         }
                         newData = groupSmallValuesToOther(newDataHash);
@@ -205,15 +216,16 @@ var Kufu = (Kufu === undefined) ? (function() {
         var newData = [];
         var otherSum = 0;
         var totalSum = 0;
-        for (var i in data)
+        for (var i in data){
             totalSum += data[i].mins_in_last_hour;
+        }
         if (totalSum > 0) {
             for (i in data){
                 console.log("Comparing " + data[i].mins_in_last_hour + " / " + totalSum + " = " +
                         (data[i].mins_in_last_hour / totalSum).toFixed(3));
                 if (data[i].mins_in_last_hour / totalSum > OTHER_THRESHOLD) {
                     newData.push({
-                        label: data[i].domain + " (" + data[i].mins_in_last_hour + " mins)",
+                        label: data[i].grouping + " (" + data[i].mins_in_last_hour + " mins)",
                         value: data[i].mins_in_last_hour
                         });
                 } else {
