@@ -7,12 +7,22 @@ var Kufu = (Kufu === undefined) ? (function() {
     /** Used to make sure that a timestamp is only set once per minute. */
     var LAST_TIMESTAMP = moment(moment.now());
 
+    /** The timeline for which to display the results. */
+    var TIMELINE = "Hour";
+
+    /** The allowed event listener names. */
+    var EVENTS = ["dataChange"];
+    var EVENT_LISTENERS = {
+        dataChange: []
+    };
+
     /**
      * The percentage that a piece of the pie must be for it not to be counted
      * as "Other".
      */
     var OTHER_THRESHOLD = 0.05;
 
+    /**The manner for which the data will be grouped in the chart*/
     var GROUPING;
 
     /** Working copy of the user's data. */
@@ -31,10 +41,7 @@ var Kufu = (Kufu === undefined) ? (function() {
     /** Gets called every minute. */
     function updateStats() {
         var t, i, diff;
-        groupingElm = document.getElementById("grouping-selection");
-        if(groupingElm && groupingElm.value){
-            GROUPING = groupingElm.value;
-        }
+        updateConfigParameters();
         chrome.tabs.query({
             active: true
         }, handleActiveTabs);
@@ -49,8 +56,9 @@ var Kufu = (Kufu === undefined) ? (function() {
                 diff = Math.abs(t.diff(moment.now()) / 1000 / 60 / 60);
                 if (diff < 1)
                     userData[key].minsInLastHour++;
-                if (diff /= 24 < 1)
+                if (diff / 24 < 1)
                     userData[key].minsInLastDay++;
+                diff = diff / 24;
                 if (diff / 7 < 1)
                     userData[key].minsInLastWeek++;
                 if (diff / 30.5 < 1) // FIXME?
@@ -78,7 +86,7 @@ var Kufu = (Kufu === undefined) ? (function() {
      * Try to load the user's data. If they don't have any, returns an empty
      * array.
      */
-    function tryLoadUserData(callback) {
+    function tryLoadUserData() {
         chrome.storage.local.get("Kufu_UserData", function(items) {
             var error = chrome.runtime.lastError;
             if (error) {
@@ -87,31 +95,7 @@ var Kufu = (Kufu === undefined) ? (function() {
                 if (items.hasOwnProperty("Kufu_UserData")) {
                     userData = items.Kufu_UserData;
                     updateStats();
-                    if (typeof callback === "function") {
-
-                        // TODO: Move the below to the calling area. This 
-                        // should be more generic.
-
-                        // Convert the data to the format needed by the D3
-                        // graph.
-                        var newData = [];
-                        var newDataHash = {};
-                        for (var key in userData) {
-                            if(GROUPING == "domain-grouping"){
-                                if(!(userData[key].domain in newDataHash)) {
-                                    newDataHash[userData[key].domain] = {grouping : userData[key].domain, mins_in_last_hour: userData[key].minsInLastHour};
-                                }
-                                else{
-                                    newDataHash[userData[key].domain].mins_in_last_hour += userData[key].minsInLastHour;
-                                }
-                            }
-                            else if(GROUPING == "url-grouping"){
-                                    newDataHash[String(key)] = {grouping: String(key), mins_in_last_hour: userData[key].minsInLastHour};
-                            }
-                        }
-                        newData = groupSmallValuesToOther(newDataHash);
-                        callback(newData);
-                    }
+                    triggerEvent("dataChange");
                 } else {
                     userData = {};
                 }
@@ -181,6 +165,7 @@ var Kufu = (Kufu === undefined) ? (function() {
                 }
             }
             storeData();
+            triggerEvent("dataChange");
         } else {
             console.warn("Not updating due to having been updated less than " +
                             "a minute ago.");
@@ -188,20 +173,20 @@ var Kufu = (Kufu === undefined) ? (function() {
     }
 
     function extractDomain(url) {
-    var domain;
-    //find & remove protocol (http, ftp, etc.) and get domain
-    if (url.indexOf("://") > -1) {
-        domain = url.split('/')[2];
-    }
-    else {
-        domain = url.split('/')[0];
-    }
+        var domain;
+        //find & remove protocol (http, ftp, etc.) and get domain
+        if (url.indexOf("://") > -1) {
+            domain = url.split('/')[2];
+        }
+        else {
+            domain = url.split('/')[0];
+        }
 
-    //find & remove port number
-    domain = domain.split(':')[0];
+        //find & remove port number
+        domain = domain.split(':')[0];
 
-    return domain;
-}
+        return domain;
+    }
 
     /**
      * Calculate the items with values that are below some percentage threshold
@@ -214,23 +199,23 @@ var Kufu = (Kufu === undefined) ? (function() {
         var otherSum = 0;
         var totalSum = 0;
         for (var i in data){
-            totalSum += data[i].mins_in_last_hour;
+            totalSum += data[i].mins;
         }
         if (totalSum > 0) {
             for (i in data){
-                console.log("Comparing " + data[i].mins_in_last_hour + " / " + totalSum + " = " +
-                        (data[i].mins_in_last_hour / totalSum).toFixed(3));
-                if (data[i].mins_in_last_hour / totalSum > OTHER_THRESHOLD) {
+                console.log("Comparing " + data[i].mins + " / " + totalSum + " = " +
+                        (data[i].mins / totalSum).toFixed(3));
+                if (data[i].mins / totalSum > OTHER_THRESHOLD) {
                     newData.push({
-                        label: data[i].grouping + " (" + data[i].mins_in_last_hour + " mins)",
-                        value: data[i].mins_in_last_hour
+                        label: data[i].grouping + " (" + getPrettyTime(data[i].mins) + ")",
+                        value: data[i].mins
                         });
                 } else {
-                    otherSum += data[i].mins_in_last_hour;
+                    otherSum += data[i].mins;
                 }
             }
             newData.push({
-                label: "Other (" + otherSum + " mins)",
+                label: "Other (" + getPrettyTime(otherSum) + ")",
                 value: otherSum
             });
         }
@@ -272,8 +257,7 @@ var Kufu = (Kufu === undefined) ? (function() {
             } else {
                 if (items.hasOwnProperty("Kufu_UserData")) {
                     console.log("Printing Database:");
-                    //console.dir(items.Kufu_UserData);
-                    console.log(JSON.stringify(items.Kufu_UserData));
+                    console.dir(items.Kufu_UserData);
                 } else {
                     console.warn("No entry in database called Kufu_UserData.");
                 }
@@ -308,12 +292,173 @@ var Kufu = (Kufu === undefined) ? (function() {
         }
     });
 
+    /**
+     * @param {Number} Some number of minutes.
+     * @returns A human-readable time value for the given number of minutes.
+     */
+    function getPrettyTime(mins) {
+        var minsInDay = 60 * 24;
+        var minsInWeek = minsInDay * 7;
+        var minsInMonth = minsInDay * 30.5;
+        var minsInYear = minsInMonth * 12;
+        var years = 0;
+        var months = 0;
+        var weeks = 0;
+        var days = 0;
+        var hours = 0;
+        var msg = "";
+        while (mins > minsInYear) {
+            years++;
+            mins -= minsInYear;
+        }
+        while (mins > minsInMonth) {
+            months++;
+            mins -= minsInMonth;
+        }
+        while (mins > minsInWeek) {
+            weeks++;
+            mins -= minsInWeek;
+        }
+        while (mins > minsInDay) {
+            days++;
+            mins -= minsInDay;
+        }
+        while (mins > 60) {
+            hours++;
+            mins -= 60;
+        }
+        if (years > 0) {
+            msg += years + (years === 1 ? " year, " : " years, ");
+        }
+        if (months > 0) {
+            msg += months + (months === 1 ? " month, " : " months, ");
+        }
+        if (weeks > 0) {
+            msg += weeks + (weeks === 1 ? " week, " : " weeks, ");
+        }
+        if (days > 0) {
+            msg += days + (days === 1 ? " day, " : " days, ");
+        }
+        if (hours > 0) {
+            msg += hours + (hours === 1 ? " hour, " : " hours, ");
+        }
+        msg += mins + (mins === 1 ? " min" : " mins");
+        return msg;
+    }
+
+    /**
+     * Update the config parameters based on what the user has set them to in
+     * the control panel.
+     */
+    function updateConfigParameters() {
+        timelineElm = document.getElementById("timeline");
+        if (timelineElm && timelineElm.value) {
+            TIMELINE = timelineElm.value;
+        }
+        groupingElm = document.getElementById("grouping-selection");
+        if(groupingElm && groupingElm.value){
+            GROUPING = groupingElm.value;
+        }
+    }
+
+    /**
+     * @returns The user's data in a format suited to graphing. The format is as
+     * follows:
+     * [{
+     *     {String} label,
+     *     {Number} value
+     * }]
+     */
+    function getData() {
+        updateConfigParameters();
+
+        var newData = [];
+        var newDataHash = {};
+        for (var key in userData) {
+            if(GROUPING == "domain-grouping"){
+                if(!(userData[key].domain in newDataHash)) {
+                    newDataHash[userData[key].domain] = {grouping : userData[key].domain, mins: userData[key]["minsInLast" + TIMELINE]};
+                }
+                else{
+                    newDataHash[userData[key].domain].mins += userData[key]["minsInLast" + TIMELINE];
+                }
+            }
+            else if(GROUPING == "url-grouping"){
+                    newDataHash[String(key)] = {grouping: String(key), mins: userData[key]["minsInLast" + TIMELINE]};
+            }
+        }
+        newData = groupSmallValuesToOther(newDataHash);
+        return newData;
+    }
+
+    /**
+     * Adds an event listener to Kufu. The available events are in EVENTS.
+     * @param {String} eventName - The name of the event
+     * @param {Function} listener - The function to be called when the event is
+     * triggered.
+     */
+    function addEventListener(eventName, listener) {
+        if (typeof eventName !== "string") {
+            throw new Error("First argument must be a string!");
+            return;
+        }
+        if (typeof listener !== "function") {
+            throw new Error("Second argument must be a function!");
+            return;
+        }
+        if (EVENTS.indexOf(eventName) === -1) {
+            var msg = eventName + " is not a valid event name!" +
+                    " Possible event names are: ";
+            for (var i = 0; i < EVENTS.length; i++) {
+                if (i === EVENTS.length - 1) {
+                    msg += EVENTS[i];
+                } else {
+                    msg += EVENTS[i] + ", ";
+                }
+            }
+            throw new Error(msg);
+        } else {
+            EVENT_LISTENERS[eventName].push(listener);
+        }
+    }
+
+    /**
+     * Call all of the event listeners for the given event.
+     * @param {String} eventName - The name of the event to call the listeners
+     * for.
+     */
+    function triggerEvent(eventName) {
+        console.log("Event " + eventName + " triggered.");
+        if (typeof eventName !== "string") {
+            throw new Error("First argument must be a string!");
+            return;
+        }
+        if (EVENTS.indexOf(eventName) === -1) {
+            var msg = eventName + " is not a valid event name!" +
+                    " Possible event names are: ";
+            for (var i = 0; i < EVENTS.length; i++) {
+                if (i === EVENTS.length - 1) {
+                    msg += EVENTS[i];
+                } else {
+                    msg += EVENTS[i] + ", ";
+                }
+            }
+            throw new Error(msg);
+        } else {
+            for (var i = 0; i < EVENT_LISTENERS[eventName].length; i++) {
+                EVENT_LISTENERS[eventName][i]();
+            }
+        }
+    }
+
     return {
         start: start,
         tryLoadUserData: tryLoadUserData,
         updateStats: updateStats,
         setOtherThreshold: setOtherThreshold,
         printDatabase: printDatabase,
-        eraseData: eraseData
+        eraseData: eraseData,
+        getData: getData,
+        addEventListener: addEventListener
     };
 }()) : Kufu;
