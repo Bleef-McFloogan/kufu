@@ -4,23 +4,52 @@
 <head>
     <title>kufu table page</title>
     <link rel="stylesheet" type="text/css" href="/styles/tableView.css">
+    <link rel="stylesheet" type="text/css" href="/styles/controlPanel.css">
     <link rel="stylesheet" type="text/css" href="/libs/bootstrap.min.css">
     <script src="/libs/moment.js"></script>
     <script src="/src/Kufu.js"></script>
 </head>
 <body>
+    <div id="control-panel">
+        <button id="control-panel-toggle-btn">+</button>
+        <div id="control-panel-inner">
+            <form class="form-inline">
+                <label for="other-percentage" class="mr-sm-2">Other %:</label>
+                <input type="number" class="form-control mb-2 mr-sm-2 mb-sm-0" id="other-percentage" value="5">
+                <button type="button" id="other-percentage-submit" class="btn btn-primary">Submit</button>
+            </form>
+            <form class="form-inline">
+                <button id="erase-data-btn" type="button" class="btn btn-danger">Erase Data</button>
+            </form>
+            <form class="form-inline">
+                <select id="timeline" class="btn btn-default">
+                    <option value="Hour" selected>Last Hour</option>
+                    <option value="Day">Last Day</option>
+                    <option value="Week">Last Week</option>
+                    <option value="Month">Last Month</option>
+                    <option value="Year">Last Year</option>
+                    <option value="AllTime">All Time</option>
+                </select>
+            </form>
+            <a href="/views/tablePage.html">See table view</a>
+        </div>
+    </div>
     <div id="container">
         <div id="header">
             <h1>Total Time Spent</h1>
         </div>
         <div id="tableContainer">
             <table id="timeTable">
-                <tr>
-                    <th>Website</th>
-                    <th>Time in Minutes</th> 
-                </tr>
+                <thead>
+                    <tr>
+                        <th>Website</th>
+                        <th>Time in Minutes</th> 
+                    </tr>
+                </thead>
+                <tbody id="timeTableBody"></tbody>
             </table>
         </div>
     </div>
     <script src="/src/tableView.js"></script>
+    <script src="/src/controlPanel.js"></script>
 </body>
