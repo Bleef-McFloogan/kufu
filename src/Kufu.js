@@ -38,6 +38,7 @@ var Kufu = (Kufu === undefined) ? (function() {
     /** Gets called every minute. */
     function updateStats() {
         var t, i, diff;
+        updateConfigParameters();
         chrome.tabs.query({
             active: true
         }, handleActiveTabs);
@@ -324,7 +325,7 @@ var Kufu = (Kufu === undefined) ? (function() {
      * Update the config parameters based on what the user has set them to in
      * the control panel.
      */
-    function updateConfigParamters() {
+    function updateConfigParameters() {
         timelineElm = document.getElementById("timeline");
         if (timelineElm && timelineElm.value) {
             TIMELINE = timelineElm.value;
@@ -340,7 +341,7 @@ var Kufu = (Kufu === undefined) ? (function() {
      * }]
      */
     function getData() {
-        updateConfigParamters();
+        updateConfigParameters();
         var newData = [];
         var time, datum;
         for (var i in userData) {
