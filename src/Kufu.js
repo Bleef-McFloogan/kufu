@@ -22,6 +22,9 @@ var Kufu = (Kufu === undefined) ? (function() {
      */
     var OTHER_THRESHOLD = 0.05;
 
+    /**The manner for which the data will be grouped in the chart*/
+    var GROUPING = "domain-grouping";
+
     /** Working copy of the user's data. */
     var userData = {};
 
@@ -127,7 +130,7 @@ var Kufu = (Kufu === undefined) ? (function() {
     function checkWindow(tab) {
         chrome.windows.get(tab.windowId, function(win) {
             if (win.focused && win.state !== "minimized") {
-                updateTrackingValue(tab.title);
+                updateTrackingValue(tab.url);
             } else {
                 console.log("Not updating because window " + tab.windowId +
                         " is not focused or is minimized.");
@@ -150,6 +153,7 @@ var Kufu = (Kufu === undefined) ? (function() {
                 userData[key].minsInAllTime++;
             } else {
                 userData[key] = {
+                    domain: extractDomain(key),
                     minsInLastHour: 1,
                     minsInLastDay: 1,
                     minsInLastWeek: 1,
@@ -168,6 +172,22 @@ var Kufu = (Kufu === undefined) ? (function() {
         }
     }
 
+    function extractDomain(url) {
+        var domain;
+        //find & remove protocol (http, ftp, etc.) and get domain
+        if (url.indexOf("://") > -1) {
+            domain = url.split('/')[2];
+        }
+        else {
+            domain = url.split('/')[0];
+        }
+
+        //find & remove port number
+        domain = domain.split(':')[0];
+
+        return domain;
+    }
+
     /**
      * Calculate the items with values that are below some percentage threshold
      * and combine them into one object with a value equal to the sum of their
@@ -177,16 +197,21 @@ var Kufu = (Kufu === undefined) ? (function() {
     function groupSmallValuesToOther(data) {
         var newData = [];
         var otherSum = 0;
-        var sum = 0;
-        for (var i = 0; i < data.length; i++){
-            sum += data[i].value;
+        var totalSum = 0;
+        for (var i in data){
+            totalSum += data[i].mins;
         }
-        if (sum > 0) {
-            for (i = 0; i < data.length; i++){
-                if (data[i].value / sum > OTHER_THRESHOLD) {
-                    newData.push(data[i]);
+        if (totalSum > 0) {
+            for (i in data){
+                console.log("Comparing " + data[i].mins + " / " + totalSum + " = " +
+                        (data[i].mins / totalSum).toFixed(3));
+                if (data[i].mins / totalSum > OTHER_THRESHOLD) {
+                    newData.push({
+                        label: data[i].grouping + " (" + getPrettyTime(data[i].mins) + ")",
+                        value: data[i].mins
+                        });
                 } else {
-                    otherSum += data[i].value;
+                    otherSum += data[i].mins;
                 }
             }
             newData.push({
@@ -330,6 +355,10 @@ var Kufu = (Kufu === undefined) ? (function() {
         if (timelineElm && timelineElm.value) {
             TIMELINE = timelineElm.value;
         }
+        groupingElm = document.getElementById("grouping-selection");
+        if(groupingElm && groupingElm.value){
+            GROUPING = groupingElm.value;
+        }
     }
 
     /**
@@ -342,17 +371,23 @@ var Kufu = (Kufu === undefined) ? (function() {
      */
     function getData() {
         updateConfigParameters();
+
         var newData = [];
-        var time, datum;
-        for (var i in userData) {
-            datum = userData[i]["minsInLast" + TIMELINE];
-            time = getPrettyTime(datum);
-            newData.push({
-                label: i + " (" + time + ")",
-                value: datum
-            });
+        var newDataHash = {};
+        for (var key in userData) {
+            if(GROUPING == "domain-grouping"){
+                if(!(userData[key].domain in newDataHash)) {
+                    newDataHash[userData[key].domain] = {grouping : userData[key].domain, mins: userData[key]["minsInLast" + TIMELINE]};
+                }
+                else{
+                    newDataHash[userData[key].domain].mins += userData[key]["minsInLast" + TIMELINE];
+                }
+            }
+            else if(GROUPING == "url-grouping"){
+                    newDataHash[String(key)] = {grouping: String(key), mins: userData[key]["minsInLast" + TIMELINE]};
+            }
         }
-        newData = groupSmallValuesToOther(newData);
+        newData = groupSmallValuesToOther(newDataHash);
         return newData;
     }
 
