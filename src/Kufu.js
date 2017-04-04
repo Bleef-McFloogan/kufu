@@ -354,10 +354,14 @@ var Kufu = (Kufu === undefined) ? (function() {
         timelineElm = document.getElementById("timeline");
         if (timelineElm && timelineElm.value) {
             TIMELINE = timelineElm.value;
+        } else {
+            console.warn("No timeline element found on page, default value will be used.");
         }
         groupingElm = document.getElementById("grouping-selection");
-        if(groupingElm && groupingElm.value){
+        if (groupingElm && groupingElm.value) {
             GROUPING = groupingElm.value;
+        } else {
+            console.warn("No grouping element found on page, default value will be used.");
         }
     }
 
@@ -375,16 +379,22 @@ var Kufu = (Kufu === undefined) ? (function() {
         var newData = [];
         var newDataHash = {};
         for (var key in userData) {
-            if(GROUPING == "domain-grouping"){
-                if(!(userData[key].domain in newDataHash)) {
-                    newDataHash[userData[key].domain] = {grouping : userData[key].domain, mins: userData[key]["minsIn" + TIMELINE]};
-                }
-                else{
+            if (GROUPING == "domain-grouping") {
+                if (!(userData[key].domain in newDataHash)) {
+                    newDataHash[userData[key].domain] = {
+                        grouping : userData[key].domain,
+                        mins: userData[key]["minsIn" + TIMELINE]
+                    };
+                } else {
                     newDataHash[userData[key].domain].mins += userData[key]["minsIn" + TIMELINE];
                 }
-            }
-            else if(GROUPING == "url-grouping"){
-                    newDataHash[String(key)] = {grouping: String(key), mins: userData[key]["minsIn" + TIMELINE]};
+            } else if (GROUPING == "url-grouping") {
+                newDataHash[String(key)] = {
+                    grouping: String(key),
+                    mins: userData[key]["minsIn" + TIMELINE]
+                };
+            } else {
+                console.error("GROUPING is not set.");
             }
         }
         newData = groupSmallValuesToOther(newDataHash);

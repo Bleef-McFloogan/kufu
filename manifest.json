@@ -1,5 +1,5 @@
 {
-    "manifest_version": 1,
+    "manifest_version": 2,
     "name": "Kufu",
     "description": "Provides a rich view of browsing history.",
     "version": "1.0",
