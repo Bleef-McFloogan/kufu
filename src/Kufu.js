@@ -8,7 +8,7 @@ var Kufu = (Kufu === undefined) ? (function() {
     var LAST_TIMESTAMP = moment(moment.now());
 
     /** The timeline for which to display the results. */
-    var TIMELINE = "Hour";
+    var TIMELINE = "LastHour";
 
     /** The allowed event listener names. */
     var EVENTS = ["dataChange"];
@@ -51,6 +51,7 @@ var Kufu = (Kufu === undefined) ? (function() {
             userData[key].minsInLastWeek = 0;
             userData[key].minsInLastMonth = 0;
             userData[key].minsInLastYear = 0;
+            userData[key].minsInAllTime = 0;
             for (i = 0; i < userData[key].timestamps.length; i++) {
                 t = moment(userData[key].timestamps[i]);
                 diff = Math.abs(t.diff(moment.now()) / 1000 / 60 / 60);
@@ -65,6 +66,7 @@ var Kufu = (Kufu === undefined) ? (function() {
                     userData[key].minsInLastMonth++;
                 if (diff / 365 < 1) // FIXME?
                     userData[key].minsInLastYear++;
+                userData[key].minsInAllTime++;
             }
         }
         storeData();
@@ -203,8 +205,6 @@ var Kufu = (Kufu === undefined) ? (function() {
         }
         if (totalSum > 0) {
             for (i in data){
-                console.log("Comparing " + data[i].mins + " / " + totalSum + " = " +
-                        (data[i].mins / totalSum).toFixed(3));
                 if (data[i].mins / totalSum > OTHER_THRESHOLD) {
                     newData.push({
                         label: data[i].grouping + " (" + getPrettyTime(data[i].mins) + ")",
@@ -377,14 +377,14 @@ var Kufu = (Kufu === undefined) ? (function() {
         for (var key in userData) {
             if(GROUPING == "domain-grouping"){
                 if(!(userData[key].domain in newDataHash)) {
-                    newDataHash[userData[key].domain] = {grouping : userData[key].domain, mins: userData[key]["minsInLast" + TIMELINE]};
+                    newDataHash[userData[key].domain] = {grouping : userData[key].domain, mins: userData[key]["minsIn" + TIMELINE]};
                 }
                 else{
-                    newDataHash[userData[key].domain].mins += userData[key]["minsInLast" + TIMELINE];
+                    newDataHash[userData[key].domain].mins += userData[key]["minsIn" + TIMELINE];
                 }
             }
             else if(GROUPING == "url-grouping"){
-                    newDataHash[String(key)] = {grouping: String(key), mins: userData[key]["minsInLast" + TIMELINE]};
+                    newDataHash[String(key)] = {grouping: String(key), mins: userData[key]["minsIn" + TIMELINE]};
             }
         }
         newData = groupSmallValuesToOther(newDataHash);
