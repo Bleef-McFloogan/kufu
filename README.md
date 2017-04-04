@@ -12,8 +12,11 @@ The best productivity tracking extension in the world.
 ## Authors
 
 Alex Seppala
+
 Angus Short
+
 Kenneth Chan
+
 Troy Wolters
 
 ## Contributing
