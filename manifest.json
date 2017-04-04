@@ -1,6 +1,7 @@
 {
     "manifest_version": 2,
     "name": "Kufu",
+    "short_name": "Kufu",
     "description": "Provides a rich view of browsing history.",
     "version": "1.0",
     "background": {

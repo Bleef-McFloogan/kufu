@@ -19,6 +19,14 @@ Kenneth Chan
 
 Troy Wolters
 
+## License
+
+This extension and all of the code used to make it is released under the MIT License, meaning it is free and open source software.
+
+Open source libraries were used to make this project and include [Bootstrap](http://getbootstrap.com/) (MIT), [d3](https://d3js.org/) (BSD-3-Clause), [jQuery](https://jquery.com) (MIT), and [moment](https://momentjs.com/) (MIT).
+
+See LICENSE.txt for more details.
+
 ## Contributing
 
 If you would like to view the source code or contribute to Kufu, check out the [git repo](https://gitlab.com/TW80000/kufu).
