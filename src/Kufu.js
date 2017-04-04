@@ -23,7 +23,7 @@ var Kufu = (Kufu === undefined) ? (function() {
     var OTHER_THRESHOLD = 0.05;
 
     /**The manner for which the data will be grouped in the chart*/
-    var GROUPING;
+    var GROUPING = "domain-grouping";
 
     /** Working copy of the user's data. */
     var userData = {};
